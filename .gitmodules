@@ -1,5 +1,5 @@
 [submodule "rl-testbed-for-energyplus"]
-	path = rl-testbed-for-energyplus
+	path = rl_testbed_for_energyplus
 	url = https://github.com/IBM/rl-testbed-for-energyplus.git
 [submodule "EnergyPlus"]
 	path = EnergyPlus

@@ -23,7 +23,7 @@
     20;                          !- Calculation Frequency
 
   SimulationControl,
-    No,                      !- Do Zone Sizing Calculation
+    Yes,                     !- Do Zone Sizing Calculation
     No,                      !- Do System Sizing Calculation
     No,                      !- Do Plant Sizing Calculation
     No,                      !- Run Simulation for Sizing Periods
@@ -392,13 +392,6 @@
     Through: 12/31,          !- Field 1
     For: AllDays,            !- Field 2
     Until: 24:00,1;          !- Field 3
-
-  Schedule:Compact,
-    ALWAYS 20,               !- Name
-    Any Number,              !- Schedule Type Limits Name
-    Through: 12/31,          !- Field 1
-    For: AllDays,            !- Field 2
-    Until: 24:00,20;         !- Field 3
   
   Schedule:Compact,
     Activity Sch,            !- Name
@@ -423,77 +416,30 @@
 
 ! -------------------- EQUIPMENT
 
-  ZoneHVAC:IdealLoadsAirSystem,
-    ZONE ONE Purchased Air,       !- Name
-    ,                             !- Availability Schedule Name
-    ZONE ONE Supply Inlet,        !- Zone Supply Air Node Name
-    ,                             !- Zone Exhaust Air Node Name
-    ,                             !- System Inlet Air Node Name
-    50,                           !- Maximum Heating Supply Air Temperature {C}
-    13,                           !- Minimum Cooling Supply Air Temperature {C}
-    0.015,                        !- Maximum Heating Supply Air Humidity Ratio {kgWater/kgDryAir}
-    0.01,                         !- Minimum Cooling Supply Air Humidity Ratio {kgWater/kgDryAir}
-    NoLimit,                      !- Heating Limit
-    ,                             !- Maximum Heating Air Flow Rate {m3/s}
-    ,                             !- Maximum Sensible Heating Capacity {W}
-    NoLimit,                      !- Cooling Limit
-    ,                             !- Maximum Cooling Air Flow Rate {m3/s}
-    ,                             !- Maximum Total Cooling Capacity {W}
-    ,                             !- Heating Availability Schedule Name
-    ,                             !- Cooling Availability Schedule Name
-    ConstantSupplyHumidityRatio,  !- Dehumidification Control Type
-    ,                             !- Cooling Sensible Heat Ratio {dimensionless}
-    ConstantSupplyHumidityRatio,  !- Humidification Control Type
-    ,                             !- Design Specification Outdoor Air Object Name
-    ,                             !- Outdoor Air Inlet Node Name
-    ,                             !- Demand Controlled Ventilation Type
-    ,                             !- Outdoor Air Economizer Type
-    ,                             !- Heat Recovery Type
-    ,                             !- Sensible Heat Recovery Effectiveness {dimensionless}
-    ;                             !- Latent Heat Recovery Effectiveness {dimensionless}
+  HVACTemplate:Thermostat,
+    ZONE ONE Thermostat,     !- Thermostat Name
+    ,                        !- Heating Setpoint Schedule
+    20,                      !- Constant Heating Setpoint {C}
+    ,                        !- Cooling Setpoint Schedule
+    1000;                    !- Constant Cooling Setpoint {C}, big because not used
 
-  ZoneControl:Thermostat,
-    ZONE ONE Thermostat,     !- Name
-    ZONE ONE,                !- Zone or ZoneList Name
-    ALWAYS 1,                !- Control Type Schedule Name
-    ThermostatSetpoint:SingleHeating,  !- Control 1 Object Type
-    Thermostat Control;      !- Control 1 Name
-
-  ThermostatSetpoint:SingleHeating,
-    Thermostat Control,      !- Name
-    ALWAYS 20;               !- Heating Setpoint Temperature Schedule Name
-
-  ZoneHVAC:Baseboard:Convective:Electric,
-      Zone1Baseboard,          !- Baseboard Name
-      ,                        !- Availability Schedule Name
-      HeatingDesignCapacity,   !- Heating Design Capacity Method
-      5000,                    !- Heating Design Capacity{ W }
-      ,                        !- Heating Design Capacity Per Floor Area{ W / m2 }
-      ,                        !- Fraction of Autosized Heating Design Capacity{ -}
-      0.97;                    !- Efficiency of the BaseBoard
-      
-  ZoneHVAC:EquipmentConnections,
-    ZONE ONE,                !- Zone Name
-    ZONE ONE Equipment,      !- Zone Conditioning Equipment List Name
-    ZONE ONE Supply Inlet,   !- Zone Air Inlet Node or NodeList Name
-    ,                        !- Zone Air Exhaust Node or NodeList Name
-    ZONE ONE Zone Air Node,  !- Zone Air Node Name
-    ZONE ONE Return Outlet;  !- Zone Return Air Node Name
-
-  ZoneHVAC:EquipmentList,
-    ZONE ONE Equipment,                      !- Name
-
-    ZoneHVAC:Baseboard:Convective:Electric,  !- Zone Equipment 1 Object Type
-    Zone1Baseboard,                          !- Zone Equipment 1 Name
-    1,                                       !- Zone Equipment 1 Cooling Sequence
-    1,                                       !- Zone Equipment 1 Heating or No-Load Sequence
-
-    ZoneHVAC:IdealLoadsAirSystem,            !- Zone Equipment 2 Object Type
-    ZONE ONE Purchased Air,                  !- Zone Equipment 2 Name
-    2,                                       !- Zone Equipment 2 Cooling Sequence
-    2;                                       !- Zone Equipment 2 Heating or No-Load Sequence
+  HVACTemplate:Zone:BaseboardHeat,
+    ZONE ONE,            !- Zone Name
+    ZONE ONE Thermostat, !- Template Thermostat Name
+    ,                    !- Zone Heating Sizing Factor
+    Electric,            !- Baseboard Heating Type
+    ,                    !- Baseboard Heating Availability Schedule Name
+    Autosize,            !- Baseboard Heating Capacity {W}
+    ,                    !- Dedicated Outdoor Air System Name
+    flow/person,         !- Outdoor Air Method
+    0.00944,             !- Outdoor Air Flow Rate per Person {m3/s}
+    0.0,                 !- Outdoor Air Flow Rate per Zone Floor Area {m3/s-m2}
+    0.0,                 !- Outdoor Air Flow Rate per Zone {m3/s}
+    ,                    !- Design Specification Outdoor Air Object Name
+    ;                    !- Design Specification Zone Air Distribution Object Name
 
 !- FURNACE : https://bigladdersoftware.com/epx/docs/8-8/input-output-reference/group-unitary-equipment.html#airloophvacunitaryfurnaceheatonly 
+!- with template : https://bigladdersoftware.com/epx/docs/8-8/input-output-reference/group-hvac-templates.html#field-design-specification-zone-air-distribution-object-name-5 
 
 ! -------------------- PEOPLE
 
@@ -520,15 +466,64 @@
     FANGER;                        !- Thermal Comfort Model 1 Type
 
 ! -------------------- OUTPUTS
+  Output:EnergyManagementSystem,
+    Verbose,                 !- Actuator Availability Dictionary Reporting
+    Verbose,                 !- Internal Variable Availability Dictionary Reporting
+    Verbose;                 !- EMS Runtime Language Debug Output Level
 
   Output:Variable,*,Site Outdoor Air Drybulb Temperature,timestep;
+  EnergyManagementSystem:Sensor,
+    OutdoorTemp,
+    Environment,
+    Site Outdoor Air Drybulb Temperature;
+  
   Output:Variable,*,Zone Thermal Comfort Operative Temperature,timestep;
+  EnergyManagementSystem:Sensor,
+    IndoorTemp,
+    Zone One PEOPLE,
+    Zone Thermal Comfort Operative Temperature;
   
   Output:Meter,Electricity:HVAC,timestep;
   Output:Variable,*,Baseboard Electric Power,timestep;
+  EnergyManagementSystem:Sensor,
+    BaseboardConsumption,
+    ZONE ONE Baseboard Heat,
+    Baseboard Electric Power;
 
   Output:Variable,*,Zone Thermal Comfort Clothing Value,timestep;
+  EnergyManagementSystem:Sensor,
+    Clothing,
+    Zone One PEOPLE,
+    Zone Thermal Comfort Clothing Value;
+
   Output:Variable,*,Zone Thermal Comfort Fanger Model PMV,timestep;
+  EnergyManagementSystem:Sensor,
+    PMV,
+    Zone One PEOPLE,
+    Zone Thermal Comfort Fanger Model PMV;
 
-  Output:VariableDictionary,IDF;
+! -------------------- ACTIONS
 
+  EnergyManagementSystem:Actuator,
+    Setpoint,                  !- Name
+    ZONE ONE,                  !- Actuated Component Unique Name
+    Zone Temperature Control,  !- Actuated Component Type
+    Heating Setpoint;          !- Actuated Component Control Type
+
+! -------------------- PROGRAMS
+
+  EnergyManagementSystem:ProgramCallingManager,
+    ExtCtrl-Based Setpoint Manager,             !- Name
+    AfterPredictorAfterHVACManagers,            !- EnergyPlus Model Calling Point
+    ExtCtrlBasedSetpointManager;                !- Program Name 1
+
+  EnergyManagementSystem:Program,
+    ExtCtrlBasedSetpointManager,                !- Name
+    SET tmp_val1 = @ExtCtrlObs 1 OutdoorTemp,
+    SET tmp_val1 = @ExtCtrlObs 2 IndoorTemp,
+    SET tmp_val1 = @ExtCtrlObs 3 BaseboardConsumption,
+    SET tmp_val1 = @ExtCtrlObs 4 Clothing,
+    SET tmp_val1 = @ExtCtrlObs 5 PMV,
+    SET tmp_val1 = @ExtCtrlAct 0 5,
+
+    SET Setpoint = @ExtCtrlAct 1;
