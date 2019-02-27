@@ -421,7 +421,7 @@
     ,                        !- Heating Setpoint Schedule
     20,                      !- Constant Heating Setpoint {C}
     ,                        !- Cooling Setpoint Schedule
-    24;                      !- Constant Cooling Setpoint {C}
+    1000;                    !- Constant Cooling Setpoint {C}, big because not used
 
   HVACTemplate:Zone:BaseboardHeat,
     ZONE ONE,            !- Zone Name
@@ -439,6 +439,7 @@
     ;                    !- Design Specification Zone Air Distribution Object Name
 
 !- FURNACE : https://bigladdersoftware.com/epx/docs/8-8/input-output-reference/group-unitary-equipment.html#airloophvacunitaryfurnaceheatonly 
+!- with template : https://bigladdersoftware.com/epx/docs/8-8/input-output-reference/group-hvac-templates.html#field-design-specification-zone-air-distribution-object-name-5 
 
 ! -------------------- PEOPLE
 
