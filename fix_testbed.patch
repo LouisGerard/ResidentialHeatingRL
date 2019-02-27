@@ -1,0 +1,16 @@
+diff --git a/gym_energyplus/__init__.py b/gym_energyplus/__init__.py
+index 61bbbcc..ac45db3 100644
+--- a/gym_energyplus/__init__.py
++++ b/gym_energyplus/__init__.py
+@@ -4,7 +4,7 @@
+ 
+ from gym.envs.registration import register
+ 
+-register(
+-    id='EnergyPlus-v0',
+-    entry_point='gym_energyplus.envs:EnergyPlusEnv',
+-)
++# register(
++#     id='EnergyPlus-v0',
++#     entry_point='gym_energyplus.envs:EnergyPlusEnv',
++# )
