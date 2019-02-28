@@ -21,6 +21,7 @@ class EnergyPlusModelResidential(EnergyPlusModel):
                 self.raw_state[0] -= 1
             else:
                 raw_state[1] = 0
+                self.raw_state[0] = self.raw_state[0] % 7
         else:
             self.raw_state = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
@@ -45,6 +46,7 @@ class EnergyPlusModelResidential(EnergyPlusModel):
                 quit()
 
         df = pd.read_csv(file_path)
+        # todo read_episode
 
     def plot_episode(self, ep):
         pass  # todo plot_episode

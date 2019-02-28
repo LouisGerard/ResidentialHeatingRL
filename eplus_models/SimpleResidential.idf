@@ -442,9 +442,6 @@
     ,                    !- Design Specification Outdoor Air Object Name
     ;                    !- Design Specification Zone Air Distribution Object Name
 
-!- FURNACE : https://bigladdersoftware.com/epx/docs/8-8/input-output-reference/group-unitary-equipment.html#airloophvacunitaryfurnaceheatonly 
-!- with template : https://bigladdersoftware.com/epx/docs/8-8/input-output-reference/group-hvac-templates.html#field-design-specification-zone-air-distribution-object-name-5 
-
 ! -------------------- PEOPLE
 
   People,
