@@ -5,18 +5,18 @@ import numpy as np
 
 class EnergyPlusModelResidential(EnergyPlusModel):
     def setup_spaces(self):
-        self.action_space = spaces.Box(low=np.array([0]),
-                                       high=np.array([50]),
+        self.action_space = spaces.Box(low=np.array([-50, 0, 0, 0]),
+                                       high=np.array([50, 5, 900, 1]),
                                        dtype=np.float32)
-        self.observation_space = spaces.Box(low=np.array([-20.0, -20.0, -20.0, -5.0]),
-                                            high=np.array([50.0, 50.0, 50.0, 5.0]),
+        self.observation_space = spaces.Box(low=np.array([-22.8, 0.0, 0.0, 0.0, 0, -20.0, 0.0, -5.0]),
+                                            high=np.array([35.0, 100.0, 15.4, 360.0, 1, 40.0, 3500, 5.0]),
                                             dtype=np.float32)
 
     def set_raw_state(self, raw_state=None):
         if raw_state is not None:
             self.raw_state = raw_state
         else:
-            self.raw_state = [0.0, 0.0, 0.0, 0.0]
+            self.raw_state = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     def compute_reward(self):
         return self.raw_state[4]

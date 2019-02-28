@@ -33,10 +33,10 @@
 
   Site:Location,
     CHICAGO_IL_USA TMY2-94846,  !- Name
-    41.78000,                !- Latitude {deg}
-    -87.75000,               !- Longitude {deg}
-    -6.000000,               !- Time Zone {hr}
-    190.0000;                !- Elevation {m}
+    41.78000,                   !- Latitude {deg}
+    -87.75000,                  !- Longitude {deg}
+    -6.000000,                  !- Time Zone {hr}
+    190.0000;                   !- Elevation {m}
 
   RunPeriod,
     WholeYearDay,            !- Name
@@ -545,6 +545,12 @@
     Schedule:Constant,       !- Actuated Component Type
     Schedule Value;          !- Actuated Component Control Type
 
+  EnergyManagementSystem:Actuator,
+    Presence_Sch_Override,   !- Name
+    Presence Sch,            !- Actuated Component Unique Name
+    Schedule:Constant,       !- Actuated Component Type
+    Schedule Value;          !- Actuated Component Control Type
+
 ! -------------------- PROGRAMS
 
   EnergyManagementSystem:ProgramCallingManager,
@@ -566,4 +572,5 @@
 
     SET Setpoint              = @ExtCtrlAct 1,
     SET Clothing_Sch_Override = @ExtCtrlAct 2,
-    SET Activity_Sch_Override = @ExtCtrlAct 3;
+    SET Activity_Sch_Override = @ExtCtrlAct 3,
+    SET Presence_Sch_Override = @ExtCtrlAct 4;

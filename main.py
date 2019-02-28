@@ -75,10 +75,6 @@ class EnergyPlusEnv(Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def close(self):
-        # In case you forget to call env.stop()
-        self.stop_instance()
-
     def reset(self):
         self.stop_instance()
 
@@ -252,45 +248,13 @@ class EnergyPlusEnv(Env):
         self.ep_model.dump_episodes(log_dir=log_dir, csv_file=csv_file)
 
 
-def parser():
-    usage = 'Usage: python {} [--verbose] [--energyplus <file>] [--model <file>] [--weather <file>] [--simulate] [--plot] [--help]'.format(
-        __file__)
-    argparser = ArgumentParser(usage=usage)
-    # argparser.add_argument('fname', type=str,
-    #                       help='echo fname')
-    argparser.add_argument('-v', '--verbose',
-                           action='store_true',
-                           help='Show verbose message')
-    argparser.add_argument('-e', '--energyplus', type=str,
-                           dest='energyplus',
-                           help='EnergyPlus executable file')
-    argparser.add_argument('-m', '--model', type=str,
-                           dest='model',
-                           help='Model file')
-    argparser.add_argument('-w', '--weather', type=str,
-                           dest='weather',
-                           help='Weather file')
-    argparser.add_argument('-s', '--simulate',
-                           action='store_true',
-                           help='Do simulation')
-    argparser.add_argument('-p', '--plot',
-                           action='store_true',
-                           help='Do plotting')
-    return argparser.parse_args()
-
-
 def easy_agent(next_state):
-    # print('-' * 50, next_state)
-    return np.array([50, 0.5, 138])
+    return np.array([-50, 0.5, 138, 1])
 
 
 if __name__ == '__main__':
-
-    args = parser()
-    # print('args={}'.format(args))
-
     # just for testing
-    env = EnergyPlusEnv(verbose=args.verbose)
+    env = EnergyPlusEnv()
     if env is None:
         quit()
 
@@ -299,18 +263,13 @@ if __name__ == '__main__':
             next_state = env.reset()
 
             for i in range(1000000):
-                # if args.verbose:
-                #    os.system('clear')
-                #    print('Step {}'.format(i))
-
-                # action = env.action_space.sample()
                 action = easy_agent(next_state)
 
                 next_state, reward, done, _ = env.step(action)
 
                 if done:
                     break
-            print('============================= Episodo done. ')
+            print('============================= Episode done. ')
             env.close()
 
 #    env.plot()
