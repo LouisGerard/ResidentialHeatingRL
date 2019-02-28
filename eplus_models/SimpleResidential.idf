@@ -493,13 +493,7 @@
     BaseboardConsumption,
     ZONE ONE Baseboard Heat,
     Baseboard Electric Power;
-
-  Output:Variable,*,Zone Thermal Comfort Clothing Value,timestep;
-  EnergyManagementSystem:Sensor,
-    Clothing,
-    Zone One PEOPLE,
-    Zone Thermal Comfort Clothing Value;
-
+  
   Output:Variable,*,Zone Thermal Comfort Fanger Model PMV,timestep;
   EnergyManagementSystem:Sensor,
     PMV,
@@ -538,8 +532,7 @@
     SET tmp_val1 = @ExtCtrlObs 1 OutdoorTemp,
     SET tmp_val1 = @ExtCtrlObs 2 IndoorTemp,
     SET tmp_val1 = @ExtCtrlObs 3 BaseboardConsumption,
-    SET tmp_val1 = @ExtCtrlObs 4 Clothing,
-    SET tmp_val1 = @ExtCtrlObs 5 PMV,
+    SET tmp_val1 = @ExtCtrlObs 4 PMV,
     SET tmp_val1 = @ExtCtrlAct 0 5,
 
     SET Setpoint              = @ExtCtrlAct 1,
