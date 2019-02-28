@@ -281,7 +281,7 @@ def parser():
 
 def easy_agent(next_state):
     # print('-' * 50, next_state)
-    return 50
+    return np.array([50, 0.5, 138])
 
 
 if __name__ == '__main__':

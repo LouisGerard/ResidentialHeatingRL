@@ -470,6 +470,7 @@
     FANGER;                        !- Thermal Comfort Model 1 Type
 
 ! -------------------- OUTPUTS
+
   Output:EnergyManagementSystem,
     Verbose,                 !- Actuator Availability Dictionary Reporting
     Verbose,                 !- Internal Variable Availability Dictionary Reporting
@@ -480,6 +481,30 @@
     OutdoorTemp,
     Environment,
     Site Outdoor Air Drybulb Temperature;
+  
+  Output:Variable,*,Site Outdoor Air Relative Humidity,timestep;
+  EnergyManagementSystem:Sensor,
+    OutdoorHum,
+    Environment,
+    Site Outdoor Air Relative Humidity;
+
+  Output:Variable,*,Site Wind Speed,timestep;
+  EnergyManagementSystem:Sensor,
+    OutdoorWindSpeed,
+    Environment,
+    Site Wind Speed;
+
+  Output:Variable,*,Site Wind Direction,timestep;
+  EnergyManagementSystem:Sensor,
+    OutdoorWindDir,
+    Environment,
+    Site Wind Direction;
+
+  Output:Variable,*,Site Rain Status,timestep;
+  EnergyManagementSystem:Sensor,
+    OutdoorRain,
+    Environment,
+    Site Rain Status;
   
   Output:Variable,*,Zone Thermal Comfort Operative Temperature,timestep;
   EnergyManagementSystem:Sensor,
@@ -530,10 +555,14 @@
   EnergyManagementSystem:Program,
     ExtCtrlBasedSetpointManager,                !- Name
     SET tmp_val1 = @ExtCtrlObs 1 OutdoorTemp,
-    SET tmp_val1 = @ExtCtrlObs 2 IndoorTemp,
-    SET tmp_val1 = @ExtCtrlObs 3 BaseboardConsumption,
-    SET tmp_val1 = @ExtCtrlObs 4 PMV,
-    SET tmp_val1 = @ExtCtrlAct 0 5,
+    SET tmp_val1 = @ExtCtrlObs 2 OutdoorHum,
+    SET tmp_val1 = @ExtCtrlObs 3 OutdoorWindSpeed,
+    SET tmp_val1 = @ExtCtrlObs 4 OutdoorWindDir,
+    SET tmp_val1 = @ExtCtrlObs 5 OutdoorRain,
+    SET tmp_val1 = @ExtCtrlObs 6 IndoorTemp,
+    SET tmp_val1 = @ExtCtrlObs 7 BaseboardConsumption,
+    SET tmp_val1 = @ExtCtrlObs 8 PMV,
+    SET tmp_val1 = @ExtCtrlAct 0 8,
 
     SET Setpoint              = @ExtCtrlAct 1,
     SET Clothing_Sch_Override = @ExtCtrlAct 2,
