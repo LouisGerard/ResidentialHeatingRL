@@ -15,6 +15,7 @@ import pandas as pd
 from argparse import ArgumentParser
 from gym_energyplus.envs.pipe_io import PipeIo
 from energyplus_model_SimpleResidential import EnergyPlusModelResidential
+import user
 
 
 class EnergyPlusEnv(Env):
@@ -71,6 +72,16 @@ class EnergyPlusEnv(Env):
 
         self.seed()
 
+        self.user = user.User(0.1, 0.1, [
+            user.Sport(),
+            user.Sleep(),
+            user.GoOut(),
+            user.Shower(),
+            user.Eat(),
+            user.TV()
+        ])
+        self.user_actions = None
+
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
@@ -82,7 +93,16 @@ class EnergyPlusEnv(Env):
         self.start_instance()
         self.timestep1 = 0
         self.ep_model.reset()
-        return self.step(None)[0]
+        state = self.step(None)[0]
+
+        self.user.choose_activity(int(state[0]-1), state[1])
+        self.user_actions = [
+            self.user.clothes,
+            self.user.metabolic,
+            self.user.presence,
+        ]
+
+        return state
 
     def start_instance(self):
         print('Starting new environment')
@@ -247,9 +267,20 @@ class EnergyPlusEnv(Env):
     def dump_episodes(self, log_dir='', csv_file='', reward_file=''):
         self.ep_model.dump_episodes(log_dir=log_dir, csv_file=csv_file)
 
+    def step_user(self):
+        day, dtime = self.ep_model.get_time()
+        if self.user.current_activity.step(day, dtime, self.user):
+            self.user.current_activity.restart()
+            self.user.choose_activity(day, dtime)
+        self.user_actions = [
+            self.user.clothes,
+            self.user.metabolic,
+            self.user.presence,
+        ]
+
 
 def easy_agent(next_state):
-    return np.array([-50, 0.5, 138, 1])
+    return np.array([-50] + env.user_actions)
 
 
 if __name__ == '__main__':
@@ -265,6 +296,7 @@ if __name__ == '__main__':
             for i in range(1000000):
                 action = easy_agent(next_state)
 
+                env.step_user()
                 next_state, reward, done, _ = env.step(action)
 
                 if done:

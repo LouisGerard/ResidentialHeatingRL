@@ -59,6 +59,7 @@ class Activity:
 
         self.presence = presence
 
+        self.started_day = None
         self.started_time = None
         self.current_duration = None
         self.current_delay = None
@@ -67,20 +68,22 @@ class Activity:
         return self.distribution[day][int(time)]
 
     def step(self,
+             day: int,
              time: float,
              user: Any) -> bool:  # FIXME can't hint User class (codependency)
         # startup
         user.current_activity = self
-        if self.started_time is None:
+        if self.started_day is None:
+            self.started_day = day
             self.started_time = time
             self.current_duration = np.random.normal(self.duration, self.duration_std)
             self.current_delay = np.random.normal(self.delay, self.delay_std)
-            print('duration', self.current_duration)
 
-        if time < self.current_delay:
+        time_offset = (day - self.started_day) * 24
+        relative_time = time - self.started_time + time_offset
+
+        if relative_time < self.current_delay:
             return False
-
-        # todo env influences
 
         # presence
         user.presence = self.presence
@@ -88,7 +91,7 @@ class Activity:
         user.clothes = self.clothes
         user.metabolic = self.metabolic
 
-        if time < self.current_duration:
+        if relative_time < self.current_duration:
             return False
 
         user.presence = True
@@ -172,10 +175,11 @@ class GoOut(Activity):
                           presence=False)
 
         def step(self,
+                 day: int,
                  time: float,
                  user: Any) -> bool:
             # random outside eat
-            if Activity.step(self, time, user):
+            if Activity.step(self, day, time, user):
                 if np.random.rand() > 0.3:
                     user.current_hunger = user.base_hunger
                 return True
@@ -232,7 +236,7 @@ class User:
                  preference: float,
                  sensitivity: float,
                  activities: List[Activity]) -> None:
-        self.preference = preference
+        self.preference = preference  # todo preferences & sensitivity
         self.sensitivity = sensitivity
         self.activities = activities
 
@@ -255,7 +259,6 @@ class User:
             p.append(a.p_start(day, time, self))
             sum_p += p[-1]
         p = np.array(p) / sum_p
-        print('p', p)
         self.current_activity = np.random.choice(self.activities, p=p)
         return self.current_activity
 
@@ -274,15 +277,13 @@ if __name__ == '__main__':
     day = 0
     time = 0
     dana.current_energy = 0.1
-    relative_time = 0
     dana.choose_activity(day, time)
 
     from time import sleep
 
     while True:
-        if dana.current_activity.step(relative_time, dana):
+        if dana.current_activity.step(day, time, dana):
             dana.current_activity.restart()
-            relative_time = 0
             dana.choose_activity(day, time)
 
             print('-' * 50)
@@ -299,7 +300,6 @@ if __name__ == '__main__':
             sleep(1)
 
         time += 0.5
-        relative_time += 0.5
         if time >= 24:
             time = time % 24
             day = (day + 1) % 7

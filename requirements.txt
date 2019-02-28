@@ -1,2 +1,4 @@
+pandas
+gym
 matplotlib
 numpy==1.16.1
