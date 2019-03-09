@@ -1,3 +1,5 @@
+mpi4py
+baselines
 pandas
 gym
 matplotlib

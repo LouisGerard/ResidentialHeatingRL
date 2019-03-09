@@ -46,8 +46,8 @@ class Activity:
 
         self.duration_std = duration_std  # instance noises, other parameters ?
         self.delay_std = delay_std
-        self.clothes_std = clothes_std
-        self.metabolic_std = metabolic_std
+        # self.clothes_std = clothes_std
+        # self.metabolic_std = metabolic_std
 
         self.hunger_influence = hunger_influence
         self.energy_influence = energy_influence
@@ -79,6 +79,8 @@ class Activity:
             self.current_duration = np.random.normal(self.duration, self.duration_std)
             self.current_delay = np.random.normal(self.delay, self.delay_std)
 
+        if day < self.started_day:
+            day += 7
         time_offset = (day - self.started_day) * 24
         relative_time = time - self.started_time + time_offset
 
@@ -127,8 +129,8 @@ class Sport(Activity):
                           duration_std=0.25,
                           clothes=0.4,
                           clothes_std=0.05,
-                          metabolic=5.0,
-                          metabolic_std=1.0,
+                          metabolic=3.0,
+                          metabolic_std=0.5,
                           delay=5/60,
                           delay_std=1/60,
                           hunger_influence=0.3,
@@ -286,18 +288,18 @@ if __name__ == '__main__':
             dana.current_activity.restart()
             dana.choose_activity(day, time)
 
-            print('-' * 50)
-            print('day', day, 'time', time)
-            print('Dana is doing', dana.current_activity.name)
-            print('hunger', dana.current_hunger)
-            print('energy', dana.current_energy)
-            print('hygiene', dana.current_hygiene)
-
-            for a in activities:
-                print(a.name, end='\t')
-            print()
-
-            sleep(1)
+            # print('-' * 50)
+            # print('day', day, 'time', time)
+            # print('Dana is doing', dana.current_activity.name)
+            # print('hunger', dana.current_hunger)
+            # print('energy', dana.current_energy)
+            # print('hygiene', dana.current_hygiene)
+            #
+            # for a in activities:
+            #     print(a.name, end='\t')
+            # print()
+            #
+            # sleep(1)
 
         time += 0.5
         if time >= 24:

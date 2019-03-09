@@ -10,7 +10,7 @@
     ,                        !- Maximum Number of Warmup Days
     6;                       !- Minimum Number of Warmup Days
 
-  Timestep,4;
+  Timestep,16;
 
   SurfaceConvectionAlgorithm:Inside,TARP;
 
@@ -29,57 +29,33 @@
     No,                      !- Run Simulation for Sizing Periods
     Yes;                     !- Run Simulation for Weather File Run Periods
 
-! -------------------- WEATHER AND LOCATION
+! -------------------- WEATHER
 
-  Site:Location,
-    CHICAGO_IL_USA TMY2-94846,  !- Name
-    41.78000,                   !- Latitude {deg}
-    -87.75000,                  !- Longitude {deg}
-    -6.000000,                  !- Time Zone {hr}
-    190.0000;                   !- Elevation {m}
+!  RunPeriod,
+!    WholeYearDay,            !- Name
+!    1,                       !- Begin Month
+!    1,                       !- Begin Day of Month
+!    12,                      !- End Month
+!    31,                      !- End Day of Month
+!    Tuesday,                 !- Day of Week for Start Day
+!    Yes,                     !- Use Weather File Holidays and Special Days
+!    Yes,                     !- Use Weather File Daylight Saving Period
+!    No,                      !- Apply Weekend Holiday Rule
+!    Yes,                     !- Use Weather File Rain Indicators
+!    Yes;                     !- Use Weather File Snow Indicators
 
   RunPeriod,
-    WholeYearDay,            !- Name
-    1,                       !- Begin Month
-    1,                       !- Begin Day of Month
-    12,                      !- End Month
-    31,                      !- End Day of Month
+    WinterPeriod,            !- Name
+    12,                      !- Begin Month
+    21,                      !- Begin Day of Month
+    03,                      !- End Month
+    20,                      !- End Day of Month
     Tuesday,                 !- Day of Week for Start Day
     Yes,                     !- Use Weather File Holidays and Special Days
     Yes,                     !- Use Weather File Daylight Saving Period
     No,                      !- Apply Weekend Holiday Rule
     Yes,                     !- Use Weather File Rain Indicators
     Yes;                     !- Use Weather File Snow Indicators
-
-! CHICAGO_IL_USA Cooling (DB=>MWB) .4%, MaxDB=  32.80 MWB=  23.60
-
-  SizingPeriod:DesignDay,
-    CHICAGO_IL_USA Cooling .4% Conditions DB=>MWB,  !- Name
-    7,                       !- Month
-    21,                      !- Day of Month
-    SummerDesignDay,         !- Day Type
-    32.80000,                !- Maximum Dry-Bulb Temperature {C}
-    10.90000,                !- Daily Dry-Bulb Temperature Range {deltaC}
-    ,                        !- Dry-Bulb Temperature Range Modifier Type
-    ,                        !- Dry-Bulb Temperature Range Modifier Day Schedule Name
-    Wetbulb,                 !- Humidity Condition Type
-    23.60000,                !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
-    ,                        !- Humidity Condition Day Schedule Name
-    ,                        !- Humidity Ratio at Maximum Dry-Bulb {kgWater/kgDryAir}
-    ,                        !- Enthalpy at Maximum Dry-Bulb {J/kg}
-    ,                        !- Daily Wet-Bulb Temperature Range {deltaC}
-    99063.21,                !- Barometric Pressure {Pa}
-    0.0,                     !- Wind Speed {m/s}
-    0.0,                     !- Wind Direction {deg}
-    No,                      !- Rain Indicator
-    No,                      !- Snow Indicator
-    No,                      !- Daylight Saving Time Indicator
-    ASHRAEClearSky,          !- Solar Model Indicator
-    ,                        !- Beam Solar Day Schedule Name
-    ,                        !- Diffuse Solar Day Schedule Name
-    ,                        !- ASHRAE Clear Sky Optical Depth for Beam Irradiance (taub) {dimensionless}
-    ,                        !- ASHRAE Clear Sky Optical Depth for Diffuse Irradiance (taud) {dimensionless}
-    1.000000;                !- Sky Clearness
 
 ! CHICAGO_IL_USA Heating 99.6%, MaxDB= -21.20 Wind Speed=   4.60 Wind Dir= 270.00
 
@@ -292,7 +268,7 @@
     ZONE ONE,                !- Zone Name
     Outdoors,                !- Outside Boundary Condition
     ,                        !- Outside Boundary Condition Object
-    SunExposed,              !- Sun Exposure
+    NoSun,              !- Sun Exposure
     WindExposed,             !- Wind Exposure
     0.50,                    !- View Factor to Ground
     4,                       !- Number of Vertices
@@ -340,7 +316,7 @@
     ZONE ONE,                !- Zone Name
     Outdoors,                !- Outside Boundary Condition
     ,                        !- Outside Boundary Condition Object
-    SunExposed,              !- Sun Exposure
+    NoSun,                   !- Sun Exposure
     WindExposed,             !- Wind Exposure
     0.50,                    !- View Factor to Ground
     4,                       !- Number of Vertices
@@ -433,7 +409,7 @@
     ,                    !- Zone Heating Sizing Factor
     Electric,            !- Baseboard Heating Type
     ,                    !- Baseboard Heating Availability Schedule Name
-    Autosize,            !- Baseboard Heating Capacity {W}
+    3000,            !- Baseboard Heating Capacity {W}
     ,                    !- Dedicated Outdoor Air System Name
     flow/person,         !- Outdoor Air Method
     0.00944,             !- Outdoor Air Flow Rate per Person {m3/s}
@@ -508,6 +484,12 @@
     IndoorTemp,
     Zone One PEOPLE,
     Zone Thermal Comfort Operative Temperature;
+
+  Output:Variable,*,People Air Relative Humidity,timestep;
+  EnergyManagementSystem:Sensor,
+    IndoorHum,
+    Zone One PEOPLE,
+    People Air Relative Humidity;
   
   Output:Meter,Electricity:HVAC,timestep;
   Output:Variable,*,Baseboard Electric Power,timestep;
@@ -516,6 +498,14 @@
     ZONE ONE Baseboard Heat,
     Baseboard Electric Power;
   
+  Output:Variable,Clothing Sch,Schedule Value,timestep;
+  Output:Variable,Activity Sch,Schedule Value,timestep;
+  Output:Variable,Presence Sch,Schedule Value,timestep;
+  EnergyManagementSystem:Sensor,
+  Presence,         ! Name
+  Presence Sch ,    ! Output:Variable Index Key Name
+  Schedule Value ;  ! Output:Variable Name
+
   Output:Variable,*,Zone Thermal Comfort Fanger Model PMV,timestep;
   EnergyManagementSystem:Sensor,
     PMV,
@@ -566,16 +556,18 @@
       SET tmp_val1 = @ExtCtrlObs 6  OutdoorWindDir,
       SET tmp_val1 = @ExtCtrlObs 7  OutdoorRain,
       SET tmp_val1 = @ExtCtrlObs 8  IndoorTemp,
-      SET tmp_val1 = @ExtCtrlObs 9  BaseboardConsumption,
-      SET tmp_val1 = @ExtCtrlObs 10 PMV,
-      SET tmp_val1 = @ExtCtrlAct 0 10,
+      SET tmp_val1 = @ExtCtrlObs 9  IndoorHum,
+      SET tmp_val1 = @ExtCtrlObs 10 BaseboardConsumption,
+      SET tmp_val1 = @ExtCtrlObs 11 PMV,
+      SET tmp_val1 = @ExtCtrlObs 12 Presence,
+      SET tmp_val1 = @ExtCtrlAct 0 12,
 
       SET Setpoint              = @ExtCtrlAct 1,
       SET Clothing_Sch_Override = @ExtCtrlAct 2,
       SET Activity_Sch_Override = @ExtCtrlAct 3,
       SET Presence_Sch_Override = @ExtCtrlAct 4,
     ELSE,
-        SET Setpoint = 25,
+        SET Setpoint = -50,
         SET Clothing_Sch_Override = 0.5,
         SET Activity_Sch_Override = 140,
         SET Presence_Sch_Override = 1,

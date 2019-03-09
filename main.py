@@ -1,21 +1,18 @@
-# Copyright (c) IBM Corp. 2018. All Rights Reserved.
-# Project name: Reinforcement Learning Testbed for Power Consumption Optimization
-# This project is licensed under the MIT License, see LICENSE
-
-from gym import Env
-from gym import spaces
-from gym.utils import seeding
-import sys, os, subprocess, time, signal, stat
-from glob import glob
 import gzip
+import os
 import shutil
+import subprocess
+from glob import glob
+
 import numpy as np
-from scipy.special import expit
-import pandas as pd
-from argparse import ArgumentParser
-from gym_energyplus.envs.pipe_io import PipeIo
-from energyplus_model_SimpleResidential import EnergyPlusModelResidential
+from gym import Env
+from gym.envs.registration import register
+from gym.utils import seeding
+
 import user
+import sys
+from energyplus_model_SimpleResidential import EnergyPlusModelResidential
+from rl_testbed_for_energyplus.gym_energyplus.envs.pipe_io import PipeIo
 
 
 class EnergyPlusEnv(Env):
@@ -34,20 +31,33 @@ class EnergyPlusEnv(Env):
         if energyplus_file is None:
             energyplus_file = os.getenv('ENERGYPLUS')
         if energyplus_file is None:
-            print('energyplus_env: FATAL: EnergyPlus executable is not specified. Use environment variable ENERGYPLUS.')
-            return None
+            print(
+                'energyplus_env: FATAL: EnergyPlus executable is not specified. '
+                'Use environment variable ENERGYPLUS.',
+                file=sys.stderr
+            )
+            return
+
         if model_file is None:
             model_file = os.getenv('ENERGYPLUS_MODEL')
         if model_file is None:
             print(
-                'energyplus_env: FATAL: EnergyPlus model file is not specified. Use environment variable ENERGYPLUS_MODEL.')
-            return None
+                'energyplus_env: FATAL: EnergyPlus model file is not specified. '
+                'Use environment variable ENERGYPLUS_MODEL.',
+                file=sys.stderr
+            )
+            return
+
         if weather_file is None:
             weather_file = os.getenv('ENERGYPLUS_WEATHER')
         if weather_file is None:
             print(
-                'energyplus_env: FATAL: EnergyPlus weather file is not specified. Use environment variable ENERGYPLUS_WEATHER.')
-            return None
+                'energyplus_env: FATAL: EnergyPlus weather file is not specified. '
+                'Use environment variable ENERGYPLUS_WEATHER.',
+                file=sys.stderr
+            )
+            return
+
         if log_dir is None:
             log_dir = os.getenv('ENERGYPLUS_LOG')
         if log_dir is None:
@@ -59,8 +69,19 @@ class EnergyPlusEnv(Env):
         self.weather_files = weather_file.split(',')
         self.log_dir = log_dir
 
+        # Create an user
+        self.user = user.User(0.1, 0.1, [
+            # user.Sport(),
+            user.Sleep(),
+            user.GoOut(),
+            user.Shower(),
+            user.Eat(),
+            user.TV()
+        ])
+        self.user_actions = None
+
         # Create an EnergyPlus model
-        self.ep_model = EnergyPlusModelResidential(model_file=self.model_file, log_dir=self.log_dir)
+        self.ep_model = EnergyPlusModelResidential(model_file=self.model_file)
 
         self.action_space = self.ep_model.action_space
         self.observation_space = self.ep_model.observation_space
@@ -72,15 +93,7 @@ class EnergyPlusEnv(Env):
 
         self.seed()
 
-        self.user = user.User(0.1, 0.1, [
-            user.Sport(),
-            user.Sleep(),
-            user.GoOut(),
-            user.Shower(),
-            user.Eat(),
-            user.TV()
-        ])
-        self.user_actions = None
+        self.action = None
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -98,7 +111,7 @@ class EnergyPlusEnv(Env):
         self.user.choose_activity(int(state[0]-1), state[1])
         self.user_actions = [
             self.user.clothes,
-            self.user.metabolic,
+            max(self.user.metabolic*104, 60),
             self.user.presence,
         ]
 
@@ -154,7 +167,7 @@ class EnergyPlusEnv(Env):
             def count_severe_errors(file):
                 if not os.path.isfile(file):
                     return -1  # Error count is unknown
-                # Sample: '   ************* EnergyPlus Completed Successfully-- 6214 Warning; 2 Severe Errors; Elapsed Time=00hr 00min  7.19sec'
+
                 fd = open(file)
                 lines = fd.readlines()
                 fd.close()
@@ -168,7 +181,6 @@ class EnergyPlusEnv(Env):
             file_csv = epsode_dir + '/eplusout.csv'
             file_csv_gz = epsode_dir + '/eplusout.csv.gz'
             file_err = epsode_dir + '/eplusout.err'
-            files_to_preserve = ['eplusout.csv', 'eplusout.err', 'eplustbl.htm']
             files_to_clean = ['eplusmtr.csv', 'eplusout.audit', 'eplusout.bnd',
                               'eplusout.dxf', 'eplusout.eio', 'eplusout.edd',
                               'eplusout.end', 'eplusout.eso', 'eplusout.mdd',
@@ -201,6 +213,10 @@ class EnergyPlusEnv(Env):
         self.timestep1 += 1
         # Send action to the environment
         if action is not None:
+            self.step_user()
+
+            self.action = action
+
             self.ep_model.set_action(action)
 
             if not self.send_action():
@@ -225,17 +241,23 @@ class EnergyPlusEnv(Env):
         return observation, reward, done, {}
 
     def send_action(self):
-        num_data = len(self.ep_model.action)
+        # if self.action[0] > 0:
+        #     setpoint = 50
+        # else:
+        #     setpoint = -50
+        setpoint = self.action[0] * 50
+        actions = [setpoint] + self.user_actions
+        num_data = len(actions)
         if self.pipe_io.writeline('{0:d}'.format(num_data)):
             return False
         for i in range(num_data):
-            self.pipe_io.writeline('{0:f}'.format(self.ep_model.action[i]))
+            self.pipe_io.writeline('{0:f}'.format(actions[i]))
         self.pipe_io.flush()
         return True
 
     def receive_observation(self):
         line = self.pipe_io.readline()
-        if (line == ''):
+        if line == '':
             # This is the (usual) case when we send action data after all simulation timestep have finished.
             return None, True
         num_data = int(line)
@@ -244,7 +266,7 @@ class EnergyPlusEnv(Env):
         raw_state = np.zeros(num_data)
         for i in range(num_data):
             line = self.pipe_io.readline()
-            if (line == ''):
+            if line == '':
                 # This is usually system error
                 return None, True
             val = float(line)
@@ -274,13 +296,19 @@ class EnergyPlusEnv(Env):
             self.user.choose_activity(day, dtime)
         self.user_actions = [
             self.user.clothes,
-            self.user.metabolic,
+            max(self.user.metabolic*104, 60),
             self.user.presence,
         ]
 
 
+register(
+    id='EnergyPlus-v0',
+    entry_point='main:EnergyPlusEnv',
+)
+
+
 def easy_agent(next_state):
-    return np.array([-50] + env.user_actions)
+    return np.array([50])
 
 
 if __name__ == '__main__':
@@ -289,19 +317,17 @@ if __name__ == '__main__':
     if env is None:
         quit()
 
-    if True:  # args.simulate:
-        for ep in range(1):
-            next_state = env.reset()
+    for ep in range(1):
+        next_state = env.reset()
 
-            for i in range(1000000):
-                action = easy_agent(next_state)
+        for i in range(1000000):
+            action = easy_agent(next_state)
 
-                env.step_user()
-                next_state, reward, done, _ = env.step(action)
+            next_state, reward, done, _ = env.step(action)
 
-                if done:
-                    break
-            print('============================= Episode done. ')
-            env.close()
+            if done:
+                break
+        print('============================= Episode done. ')
+        env.close()
 
-#    env.plot()
+    env.plot(csv_file='log/output/episode-00000000/eplusout.csv.gz')
