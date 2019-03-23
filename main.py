@@ -81,7 +81,7 @@ class EnergyPlusEnv(Env):
         self.user_actions = None
 
         # Create an EnergyPlus model
-        self.ep_model = EnergyPlusModelResidential(model_file=self.model_file)
+        self.ep_model = EnergyPlusModelResidential(model_file=self.model_file, user=self.user)
 
         self.action_space = self.ep_model.action_space
         self.observation_space = self.ep_model.observation_space
@@ -108,7 +108,8 @@ class EnergyPlusEnv(Env):
         self.ep_model.reset()
         state = self.step(None)[0]
 
-        self.user.choose_activity(int(state[0]-1), state[1])
+        day, dtime = self.ep_model.get_time()
+        self.user.choose_activity(day, dtime)
         self.user_actions = [
             self.user.clothes,
             max(self.user.metabolic*104, 60),
@@ -307,8 +308,41 @@ register(
 )
 
 
-def easy_agent(next_state):
-    return np.array([50])
+def presence_agent(model: EnergyPlusModelResidential):
+    return np.array([model.raw_state[model.presence_i] * 2 - 1])
+
+
+def pmv_agent(model: EnergyPlusModelResidential):
+    return np.array([(model.raw_state[model.pmv_i] < 0) * 2 - 1])
+
+
+def presence_pmv_agent(model: EnergyPlusModelResidential):
+    return np.array([(model.raw_state[model.pmv_i]*model.raw_state[model.presence_i] < 0) * 2 - 1])
+
+
+def time_agent(model: EnergyPlusModelResidential):
+    return np.array([(model.raw_state[model.time_i] > 20 or model.raw_state[model.time_i] < 8) * 2 - 1])
+
+
+def conseils_thermiques_org_agent(model: EnergyPlusModelResidential):
+    off = np.array([19.5/50])
+    on = np.array([18/50])
+
+    if not model.raw_state[model.presence_i]:
+        return off
+
+    if 23 > model.raw_state[model.time_i] > 6:
+        return on
+
+    return off
+
+
+def on_agent(model: EnergyPlusModelResidential):
+    return np.array([1])
+
+
+def off_agent(model: EnergyPlusModelResidential):
+    return np.array([-1])
 
 
 if __name__ == '__main__':
@@ -321,7 +355,7 @@ if __name__ == '__main__':
         next_state = env.reset()
 
         for i in range(1000000):
-            action = easy_agent(next_state)
+            action = presence_pmv_agent(env.ep_model)
 
             next_state, reward, done, _ = env.step(action)
 

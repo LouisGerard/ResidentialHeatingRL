@@ -10,7 +10,7 @@
     ,                        !- Maximum Number of Warmup Days
     6;                       !- Minimum Number of Warmup Days
 
-  Timestep,16;
+  Timestep,15;
 
   SurfaceConvectionAlgorithm:Inside,TARP;
 
@@ -548,19 +548,16 @@
   EnergyManagementSystem:Program,
     ExtCtrlBasedSetpointManager,                !- Name
     IF WarmupFlag == 0.0,
-      SET tmp_val1 = @ExtCtrlObs 1  DayOfWeek,
-      SET tmp_val1 = @ExtCtrlObs 2  CurrentTime,
-      SET tmp_val1 = @ExtCtrlObs 3  OutdoorTemp,
-      SET tmp_val1 = @ExtCtrlObs 4  OutdoorHum,
-      SET tmp_val1 = @ExtCtrlObs 5  OutdoorWindSpeed,
-      SET tmp_val1 = @ExtCtrlObs 6  OutdoorWindDir,
-      SET tmp_val1 = @ExtCtrlObs 7  OutdoorRain,
-      SET tmp_val1 = @ExtCtrlObs 8  IndoorTemp,
-      SET tmp_val1 = @ExtCtrlObs 9  IndoorHum,
-      SET tmp_val1 = @ExtCtrlObs 10 BaseboardConsumption,
-      SET tmp_val1 = @ExtCtrlObs 11 PMV,
-      SET tmp_val1 = @ExtCtrlObs 12 Presence,
-      SET tmp_val1 = @ExtCtrlAct 0 12,
+      SET tmp_val1 = @ExtCtrlObs 1 DayOfWeek,
+      SET tmp_val1 = @ExtCtrlObs 2 CurrentTime,
+      SET tmp_val1 = @ExtCtrlObs 3 OutdoorTemp,
+      SET tmp_val1 = @ExtCtrlObs 4 OutdoorHum,
+      SET tmp_val1 = @ExtCtrlObs 5 IndoorTemp,
+      SET tmp_val1 = @ExtCtrlObs 6 IndoorHum,
+      SET tmp_val1 = @ExtCtrlObs 7 BaseboardConsumption,
+      SET tmp_val1 = @ExtCtrlObs 8 PMV,
+      SET tmp_val1 = @ExtCtrlObs 9 Presence,
+      SET tmp_val1 = @ExtCtrlAct 0 9,
 
       SET Setpoint              = @ExtCtrlAct 1,
       SET Clothing_Sch_Override = @ExtCtrlAct 2,

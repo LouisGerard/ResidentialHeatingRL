@@ -142,7 +142,7 @@ class Sport(Activity):
         return Activity.p_start(self, day, time, user) * min(user.current_energy, 1)
 
 
-class Sleep(Activity):  # todo get naked
+class Sleep(Activity):
     def __init__(self):
         Activity.__init__(self,
                           name='Sleep',
